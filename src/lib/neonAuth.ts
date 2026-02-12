@@ -5,7 +5,7 @@
 
 import type { User } from '@/types';
 
-const NEON_AUTH_URL = import.meta.env.VITE_NEON_AUTH_URL || '';
+const NEON_AUTH_URL = import.meta.env.VITE_NEON_AUTH_URL || 'https://ep-solitary-cloud-abmfowfq.neonauth.eu-west-2.aws.neon.tech/neondb/auth';
 
 interface NeonAuthUser {
   id: string;
