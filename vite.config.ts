@@ -39,13 +39,7 @@ export default defineConfig(({ mode }) => {
     // Production build
     build: {
       target: 'esnext',
-      minify: 'terser',
-      terserOptions: {
-        compress: {
-          drop_console: true,
-          drop_debugger: true,
-        },
-      },
+      minify: 'esbuild',
       sourcemap: mode === 'development',
       rollupOptions: {
         output: {

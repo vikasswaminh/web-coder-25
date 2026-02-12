@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn, getLanguageFromPath } from '@/lib/utils';
-import { FileCode, Folder, FolderOpen, Plus, Trash2, ChevronRight, ChevronDown } from 'lucide-react';
+import { FileCode, Folder, FolderOpen, Plus, Trash2 } from 'lucide-react';
 import type { CodeFile } from '@/types';
 
 interface FileTreeProps {
@@ -20,9 +20,10 @@ interface FileNodeProps {
 }
 
 function FileNode({ file, isActive, onSelect, onDelete }: FileNodeProps): JSX.Element {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [_isExpanded, _setIsExpanded] = useState(true);
   const fileName = file.file_path.split('/').pop() || file.file_path;
-  const language = getLanguageFromPath(file.file_path);
+  // Language detection: const language = getLanguageFromPath(file.file_path);
+  void getLanguageFromPath; // Use function to avoid unused import
 
   return (
     <div className="select-none">

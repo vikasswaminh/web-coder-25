@@ -20,8 +20,8 @@ import { codeFilesApi, projectsApi } from '@/api/endpoints';
 import { useProjectStore } from '@/stores/projectStore';
 import { useEditorStore } from '@/stores/editorStore';
 import { toast } from '@/hooks/use-toast';
-import { ArrowLeft, Plus, Save, Bot, X } from 'lucide-react';
-import type { CodeFile, Project } from '@/types';
+import { ArrowLeft, Plus, Bot, X } from 'lucide-react';
+import type { CodeFile } from '@/types';
 
 export default function Workspace(): JSX.Element {
   const { projectId } = useParams<{ projectId: string }>();

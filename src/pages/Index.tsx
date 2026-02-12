@@ -4,7 +4,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { LoadingScreen } from '@/components/layout/LoadingScreen';
 import { Button } from '@/components/ui/button';
 import { Code2, Sparkles, Zap, Shield } from 'lucide-react';
-import { Link } from 'react-router-dom';
+// Landing page - no Link needed yet
 
 export default function Index(): JSX.Element {
   const navigate = useNavigate();

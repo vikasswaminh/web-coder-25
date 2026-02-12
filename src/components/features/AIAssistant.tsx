@@ -16,7 +16,7 @@ interface AIAssistantProps {
   context?: string;
 }
 
-export function AIAssistant({ projectId, context }: AIAssistantProps): JSX.Element {
+export function AIAssistant({ projectId: _projectId, context }: AIAssistantProps): JSX.Element {
   const [messages, setMessages] = useState<Message[]>([
     { role: 'assistant', content: 'Hello! I\'m your AI coding assistant. How can I help you today?' }
   ]);

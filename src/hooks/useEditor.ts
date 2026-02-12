@@ -32,7 +32,7 @@ export function useEditor(): UseEditorReturn {
     setDirty,
   } = useEditorStore();
 
-  const loadFile = useCallback((fileId: number, filePath: string, content: string): void => {
+  const loadFile = useCallback((_fileId: number, filePath: string, content: string): void => {
     const lang = getLanguageFromPath(filePath);
     useEditorStore.getState().setCode(content);
     useEditorStore.getState().setLanguage(lang);
