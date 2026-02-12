@@ -1,123 +1,126 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Code2, AlertCircle } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAuthStore } from '@/stores/authStore';
+import { neonAuth } from '@/lib/neonAuth';
+import { Code2, Sparkles, Zap, Shield } from 'lucide-react';
 
 export default function Signup(): JSX.Element {
-  const { signup } = useAuth();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuthStore();
 
-  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
-    e.preventDefault();
-    setError('');
-
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
     }
+  }, [isAuthenticated, navigate]);
 
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters');
-      return;
-    }
+  const handleSignup = () => {
+    const signupUrl = neonAuth.getSignupUrl();
+    window.location.href = signupUrl;
+  };
 
-    setIsSubmitting(true);
-
-    try {
-      await signup({ email, password, name });
-    } catch {
-      setError('Failed to create account');
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleLogin = () => {
+    navigate('/login');
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1 flex flex-col items-center">
-          <div className="p-3 rounded-full bg-primary/10 mb-2">
-            <Code2 className="h-8 w-8 text-primary" />
-          </div>
-          <CardTitle className="text-2xl">Create an account</CardTitle>
-          <CardDescription>Get started with WebCoder25 today</CardDescription>
-        </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            {error && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input
-                id="name"
-                type="text"
-                placeholder="John Doe"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-12">
+        <div className="max-w-4xl mx-auto">
+          {/* Hero */}
+          <div className="text-center mb-12">
+            <div className="flex justify-center mb-6">
+              <div className="p-4 rounded-2xl bg-primary/10">
+                <Code2 className="h-12 w-12 text-primary" />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="name@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                placeholder="••••••••"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-              />
-            </div>
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? 'Creating account...' : 'Create account'}
-            </Button>
-            <p className="text-sm text-muted-foreground text-center">
-              Already have an account?{' '}
-              <Link to="/login" className="text-primary hover:underline">
-                Sign in
-              </Link>
+            <h1 className="text-4xl font-bold mb-4">
+              Start Coding with AI
+            </h1>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Join thousands of developers using WebCoder25 to write better code faster
             </p>
-          </CardFooter>
-        </form>
-      </Card>
+          </div>
+
+          {/* Features Grid */}
+          <div className="grid md:grid-cols-3 gap-6 mb-12">
+            <div className="p-6 rounded-lg bg-card border border-border text-center">
+              <Sparkles className="h-8 w-8 text-primary mx-auto mb-4" />
+              <h3 className="font-semibold mb-2">AI Assistant</h3>
+              <p className="text-sm text-muted-foreground">
+                Get intelligent code suggestions and explanations
+              </p>
+            </div>
+            <div className="p-6 rounded-lg bg-card border border-border text-center">
+              <Zap className="h-8 w-8 text-primary mx-auto mb-4" />
+              <h3 className="font-semibold mb-2">Fast & Efficient</h3>
+              <p className="text-sm text-muted-foreground">
+                Lightning-fast code editing with modern tools
+              </p>
+            </div>
+            <div className="p-6 rounded-lg bg-card border border-border text-center">
+              <Shield className="h-8 w-8 text-primary mx-auto mb-4" />
+              <h3 className="font-semibold mb-2">Secure</h3>
+              <p className="text-sm text-muted-foreground">
+                Enterprise-grade security for your code
+              </p>
+            </div>
+          </div>
+
+          {/* Signup Card */}
+          <Card className="max-w-md mx-auto">
+            <CardHeader className="text-center">
+              <CardTitle>Create Your Account</CardTitle>
+              <CardDescription>
+                Get started for free with Neon Auth
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Button 
+                className="w-full" 
+                size="lg"
+                onClick={handleSignup}
+              >
+                Sign Up with Neon Auth
+              </Button>
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-card px-2 text-muted-foreground">
+                    Already have an account?
+                  </span>
+                </div>
+              </div>
+
+              <Button 
+                variant="outline" 
+                className="w-full" 
+                size="lg"
+                onClick={handleLogin}
+              >
+                Sign In
+              </Button>
+
+              <p className="text-center text-sm text-muted-foreground">
+                By signing up, you agree to our{' '}
+                <a href="#" className="underline hover:text-primary">
+                  Terms of Service
+                </a>{' '}
+                and{' '}
+                <a href="#" className="underline hover:text-primary">
+                  Privacy Policy
+                </a>
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }
