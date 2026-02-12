@@ -11,7 +11,6 @@ const NEON_AUTH_BASE = import.meta.env.VITE_NEON_AUTH_URL ||
 
 // Stack Auth OAuth endpoints
 const STACK_AUTH_URL = `${NEON_AUTH_BASE}/neondb/auth`;
-const TOKEN_ENDPOINT = `${NEON_AUTH_BASE}/api/v1/auth/callback`;
 const USERINFO_ENDPOINT = `${NEON_AUTH_BASE}/api/v1/users/me`;
 
 interface NeonAuthUser {
