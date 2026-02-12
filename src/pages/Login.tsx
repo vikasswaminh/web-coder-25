@@ -1,36 +1,14 @@
-import { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuthStore } from '@/stores/authStore';
 import { neonAuth } from '@/lib/neonAuth';
-import { Code2, Loader2 } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { Code2 } from 'lucide-react';
 
 export default function Login(): JSX.Element {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const { isAuthenticated, login, setLoading } = useAuthStore();
-  const [isProcessing, setIsProcessing] = useState(false);
-
-  // Check for auth callback
-  useEffect(() => {
-    const code = searchParams.get('code');
-    const error = searchParams.get('error');
-
-    if (error) {
-      toast({
-        title: 'Authentication Error',
-        description: error,
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (code) {
-      handleAuthCallback(code);
-    }
-  }, [searchParams]);
+  const { isAuthenticated } = useAuthStore();
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -39,59 +17,14 @@ export default function Login(): JSX.Element {
     }
   }, [isAuthenticated, navigate]);
 
-  const handleAuthCallback = async (code: string) => {
-    setIsProcessing(true);
-    setLoading(true);
-
-    try {
-      const result = await neonAuth.handleCallback(code);
-
-      if (result) {
-        login(result.user, result.token);
-        toast({
-          title: 'Welcome back!',
-          description: `Signed in as ${result.user.email}`,
-        });
-        navigate('/dashboard');
-      } else {
-        toast({
-          title: 'Sign in failed',
-          description: 'Unable to complete authentication. Please try again.',
-          variant: 'destructive',
-        });
-      }
-    } catch (error) {
-      toast({
-        title: 'Sign in error',
-        description: 'An error occurred during sign in.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsProcessing(false);
-      setLoading(false);
-    }
-  };
-
   const handleLogin = () => {
     const loginUrl = neonAuth.getLoginUrl();
     window.location.href = loginUrl;
   };
 
   const handleSignup = () => {
-    const signupUrl = neonAuth.getSignupUrl();
-    window.location.href = signupUrl;
+    navigate('/signup');
   };
-
-  if (isProcessing) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Completing sign in...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">

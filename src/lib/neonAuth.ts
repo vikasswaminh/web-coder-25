@@ -26,7 +26,7 @@ export const neonAuth = {
    */
   getLoginUrl(): string {
     const redirectUri = `${window.location.origin}/auth/callback`;
-    return `${NEON_AUTH_URL}/authorize?redirect_uri=${encodeURIComponent(redirectUri)}`;
+    return `${NEON_AUTH_URL}?redirect_uri=${encodeURIComponent(redirectUri)}&mode=login`;
   },
 
   /**
@@ -34,7 +34,7 @@ export const neonAuth = {
    */
   getSignupUrl(): string {
     const redirectUri = `${window.location.origin}/auth/callback`;
-    return `${NEON_AUTH_URL}/signup?redirect_uri=${encodeURIComponent(redirectUri)}`;
+    return `${NEON_AUTH_URL}?redirect_uri=${encodeURIComponent(redirectUri)}&mode=signup`;
   },
 
   /**
