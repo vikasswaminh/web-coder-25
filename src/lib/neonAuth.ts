@@ -1,11 +1,18 @@
 /**
  * Neon Auth Integration
- * Handles authentication via Neon Auth service
+ * Uses Stack Auth (Neon's auth provider) OAuth 2.0 flow
  */
 
 import type { User } from '@/types';
 
-const NEON_AUTH_URL = import.meta.env.VITE_NEON_AUTH_URL || 'https://ep-solitary-cloud-abmfowfq.neonauth.eu-west-2.aws.neon.tech/neondb/auth';
+// Get Neon Auth base URL from env or use fallback
+const NEON_AUTH_BASE = import.meta.env.VITE_NEON_AUTH_URL || 
+  'https://ep-solitary-cloud-abmfowfq.neonauth.eu-west-2.aws.neon.tech';
+
+// Stack Auth OAuth endpoints
+const STACK_AUTH_URL = `${NEON_AUTH_BASE}/neondb/auth`;
+const TOKEN_ENDPOINT = `${NEON_AUTH_BASE}/api/v1/auth/callback`;
+const USERINFO_ENDPOINT = `${NEON_AUTH_BASE}/api/v1/users/me`;
 
 interface NeonAuthUser {
   id: string;
@@ -22,11 +29,21 @@ interface AuthTokens {
 
 export const neonAuth = {
   /**
-   * Get the login URL for Neon Auth
+   * Get the login URL for Neon Auth (Stack Auth OAuth)
    */
   getLoginUrl(): string {
     const redirectUri = `${window.location.origin}/auth/callback`;
-    return `${NEON_AUTH_URL}?redirect_uri=${encodeURIComponent(redirectUri)}&mode=login`;
+    const state = btoa(JSON.stringify({ redirect: '/dashboard', nonce: Math.random().toString(36) }));
+    
+    // Stack Auth OAuth authorization endpoint
+    const params = new URLSearchParams({
+      redirect_uri: redirectUri,
+      state: state,
+      after_callback_redirect_or_tenant: redirectUri,
+      type: 'login'
+    });
+    
+    return `${STACK_AUTH_URL}?${params.toString()}`;
   },
 
   /**
@@ -34,7 +51,16 @@ export const neonAuth = {
    */
   getSignupUrl(): string {
     const redirectUri = `${window.location.origin}/auth/callback`;
-    return `${NEON_AUTH_URL}?redirect_uri=${encodeURIComponent(redirectUri)}&mode=signup`;
+    const state = btoa(JSON.stringify({ redirect: '/dashboard', nonce: Math.random().toString(36) }));
+    
+    const params = new URLSearchParams({
+      redirect_uri: redirectUri,
+      state: state,
+      after_callback_redirect_or_tenant: redirectUri,
+      type: 'register'
+    });
+    
+    return `${STACK_AUTH_URL}?${params.toString()}`;
   },
 
   /**
@@ -42,7 +68,8 @@ export const neonAuth = {
    */
   async handleCallback(code: string): Promise<{ user: User; token: string } | null> {
     try {
-      const response = await fetch(`${NEON_AUTH_URL}/token`, {
+      // Stack Auth uses the callback endpoint to exchange code for session
+      const response = await fetch(`${STACK_AUTH_URL}/callback`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -54,21 +81,35 @@ export const neonAuth = {
       });
 
       if (!response.ok) {
+        const error = await response.text();
+        console.error('Token exchange failed:', error);
         throw new Error('Failed to exchange code for tokens');
       }
 
-      const tokens: AuthTokens = await response.json();
+      // Stack Auth returns session in cookies and/or body
+      const data = await response.json();
+      
+      // Extract tokens from response
+      const accessToken = data.access_token || data.token;
+      if (!accessToken) {
+        console.error('No access token in response:', data);
+        throw new Error('No access token received');
+      }
       
       // Store tokens
-      localStorage.setItem('neon_access_token', tokens.access_token);
-      localStorage.setItem('neon_refresh_token', tokens.refresh_token);
-      localStorage.setItem('neon_expires_at', tokens.expires_at.toString());
+      localStorage.setItem('neon_access_token', accessToken);
+      if (data.refresh_token) {
+        localStorage.setItem('neon_refresh_token', data.refresh_token);
+      }
+      if (data.expires_at) {
+        localStorage.setItem('neon_expires_at', data.expires_at.toString());
+      }
 
       // Get user info
-      const user = await this.getCurrentUser(tokens.access_token);
+      const user = await this.getCurrentUser(accessToken);
       
       if (user) {
-        return { user, token: tokens.access_token };
+        return { user, token: accessToken };
       }
       
       return null;
@@ -89,15 +130,15 @@ export const neonAuth = {
     }
 
     try {
-      const response = await fetch(`${NEON_AUTH_URL}/me`, {
+      const response = await fetch(USERINFO_ENDPOINT, {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
         },
       });
 
       if (!response.ok) {
-        // Token might be expired, try to refresh
         if (response.status === 401) {
+          // Try to refresh token
           const refreshed = await this.refreshToken();
           if (refreshed) {
             return this.getCurrentUser(refreshed.access_token);
@@ -113,7 +154,7 @@ export const neonAuth = {
         email: neonUser.email,
         name: neonUser.name || neonUser.email.split('@')[0],
         avatar_url: neonUser.avatar_url,
-        role: 'user', // Default role
+        role: 'user',
       };
     } catch (error) {
       console.error('Get user error:', error);
@@ -132,7 +173,7 @@ export const neonAuth = {
     }
 
     try {
-      const response = await fetch(`${NEON_AUTH_URL}/refresh`, {
+      const response = await fetch(`${NEON_AUTH_BASE}/api/v1/auth/refresh`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -146,13 +187,21 @@ export const neonAuth = {
         throw new Error('Failed to refresh token');
       }
 
-      const tokens: AuthTokens = await response.json();
+      const data = await response.json();
       
-      localStorage.setItem('neon_access_token', tokens.access_token);
-      localStorage.setItem('neon_refresh_token', tokens.refresh_token);
-      localStorage.setItem('neon_expires_at', tokens.expires_at.toString());
+      localStorage.setItem('neon_access_token', data.access_token);
+      if (data.refresh_token) {
+        localStorage.setItem('neon_refresh_token', data.refresh_token);
+      }
+      if (data.expires_at) {
+        localStorage.setItem('neon_expires_at', data.expires_at.toString());
+      }
       
-      return tokens;
+      return {
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+        expires_at: data.expires_at,
+      };
     } catch (error) {
       console.error('Refresh token error:', error);
       return null;
@@ -168,7 +217,7 @@ export const neonAuth = {
     localStorage.removeItem('neon_expires_at');
     
     // Redirect to Neon Auth logout
-    window.location.href = `${NEON_AUTH_URL}/logout?redirect_uri=${encodeURIComponent(window.location.origin)}`;
+    window.location.href = `${STACK_AUTH_URL}?type=logout&redirect_uri=${encodeURIComponent(window.location.origin)}`;
   },
 
   /**
